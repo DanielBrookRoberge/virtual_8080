@@ -1,6 +1,6 @@
 pub mod bytes;
-pub mod flags;
-pub mod memory;
-pub mod machine;
-pub mod state;
 pub mod cpu;
+pub mod flags;
+pub mod machine;
+pub mod memory;
+pub mod state;

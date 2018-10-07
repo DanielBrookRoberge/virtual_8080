@@ -149,9 +149,9 @@ impl State {
         self.cc.cy = self.a < operand;
     }
 
-    pub fn jump_if(&mut self, condition: bool) {
+    pub fn jump_if(&mut self, predicate: impl Fn(&State) -> bool) {
         let new_address = assemble_word(self.get_arg(2), self.get_arg(1));
-        if condition {
+        if predicate(self) {
             self.pc = new_address;
             self.increment = 0;
         }
@@ -561,12 +561,11 @@ mod tests {
         state.memory.set(0x22, 0x32);
 
         state.pc = 0x20;
-        state.jump_if(false);
+        state.jump_if(|ref s| s.pc == 0x21);
         assert_eq!(state.pc, 0x20);
         assert_eq!(state.increment, 3);
 
-        state.pc = 0x20;
-        state.jump_if(true);
+        state.jump_if(|ref s| s.pc < 0x21);
         assert_eq!(state.pc, 0x3216);
         assert_eq!(state.increment, 0);
     }
