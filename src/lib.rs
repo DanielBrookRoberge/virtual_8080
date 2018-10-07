@@ -1,4 +1,5 @@
-mod bytes;
-mod flags;
-mod memory;
-mod state;
+pub mod bytes;
+pub mod flags;
+pub mod memory;
+pub mod machine;
+pub mod state;
