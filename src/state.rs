@@ -205,6 +205,13 @@ impl State {
         }
     }
 
+    pub fn rst_to(&mut self, target: u16) {
+        let ret = self.pc + 2;
+        self.push16(ret);
+        self.pc = target;
+        self.increment = 0;
+    }
+
     pub fn pop8(&mut self) -> u8 {
         self.sp += 1;
         self.memory.get(self.sp - 1)

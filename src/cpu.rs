@@ -444,7 +444,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.add8(addend);
         }
-        0xc7 => unimplemented_instruction(s), // RST 0 (unimplemented)
+        0xc7 => { s.rst_to(0x00); }, // RST 0
         0xc8 => {
             // RZ
             s.ret_if(State::is_z);
@@ -474,7 +474,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.adc8(addend);
         }
-        0xcf => unimplemented_instruction(s), // RST 1 (unimplemented)
+        0xcf => { s.rst_to(0x08); }, // RST 1
 
         0xd0 => {
             // RNC
@@ -509,7 +509,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.sub8(addend);
         }
-        0xd7 => unimplemented_instruction(s), // RST 2 (unimplemented)
+        0xd7 => { s.rst_to(0x10); }, // RST 2
         0xd8 => {
             // RC
             s.ret_if(State::is_c);
@@ -539,7 +539,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.sbb8(addend);
         }
-        0xdf => unimplemented_instruction(s), // RST 3 (unimplemented)
+        0xdf => { s.rst_to(0x18); } // RST 3
 
         0xe0 => {
             // RPO
@@ -581,7 +581,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.and8(addend);
         }
-        0xe7 => unimplemented_instruction(s), // RST 4 (unimplemented)
+        0xe7 => { s.rst_to(0x20); } // RST 4
         0xe8 => {
             // RPE
             s.ret_if(|ref s| s.cc.p);
@@ -619,7 +619,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.xor8(addend);
         }
-        0xef => unimplemented_instruction(s), // RST 5 (unimplemented)
+        0xef => { s.rst_to(0x28); }, // RST 5
 
         0xf0 => {
             // RP
@@ -654,7 +654,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.or8(addend);
         }
-        0xf7 => unimplemented_instruction(s), // RST 6 (unimplemented)
+        0xf7 => { s.rst_to(0x30); }, // RST 6
         0xf8 => {
             // RM
             s.ret_if(State::is_minus);
@@ -683,7 +683,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
             let addend = s.get_arg(1);
             s.cmp8(addend);
         }
-        0xff => unimplemented_instruction(s), // RST 7 (unimplemented)
+        0xff => { s.rst_to(0x38); } // RST 7
 
         _ => unimplemented_instruction(s),
     }
