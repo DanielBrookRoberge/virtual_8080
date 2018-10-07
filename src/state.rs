@@ -39,6 +39,34 @@ impl State {
         }
     }
 
+    pub fn is_plus(s: &State) -> bool {
+        !s.cc.s
+    }
+
+    pub fn is_minus(s: &State) -> bool {
+        s.cc.s
+    }
+
+    pub fn is_nz(s: &State) -> bool {
+        !s.cc.z
+    }
+
+    pub fn is_z(s: &State) -> bool {
+        s.cc.z
+    }
+
+    pub fn is_nc(s: &State) -> bool {
+        !s.cc.cy
+    }
+
+    pub fn is_c(s: &State) -> bool {
+        s.cc.cy
+    }
+
+    pub fn unconditionally(_s: &State) -> bool {
+        true
+    }
+
     pub fn advance(&mut self) {
         self.pc += self.increment;
     }
@@ -167,9 +195,9 @@ impl State {
         self.push8(low_order_byte(value));
     }
 
-    pub fn call_if(&mut self, condition: bool) {
+    pub fn call_if(&mut self, predicate: impl Fn(&State) -> bool) {
         let new_address = assemble_word(self.get_arg(2), self.get_arg(1));
-        if condition {
+        if predicate(self) {
             let ret = self.pc + 2;
             self.push16(ret);
             self.pc = new_address;
@@ -188,8 +216,8 @@ impl State {
         assemble_word(high_order, low_order)
     }
 
-    pub fn ret_if(&mut self, condition: bool) {
-        if condition {
+    pub fn ret_if(&mut self, predicate: impl Fn(&State) -> bool) {
+        if predicate(self) {
             self.pc = self.pop16();
             self.increment = 0;
         }
@@ -608,7 +636,7 @@ mod tests {
         state.memory.set(0x3022, 0x32);
 
         state.pc = 0x3020;
-        state.call_if(false);
+        state.call_if(|ref s| s.pc > 0x4000);
         assert_eq!(state.pc, 0x3020);
         assert_eq!(state.increment, 3);
         assert_eq!(state.sp, 0xff);
@@ -616,7 +644,7 @@ mod tests {
         assert_eq!(state.memory.get(0xfd), 0x00);
 
         state.pc = 0x3020;
-        state.call_if(true);
+        state.call_if(|ref s| s.pc < 0x4000);
         assert_eq!(state.pc, 0x3216);
         assert_eq!(state.increment, 0);
         assert_eq!(state.sp, 0xfd);
@@ -656,11 +684,11 @@ mod tests {
         state.push16(0x9876);
 
         state.pc = 0xcafe;
-        state.ret_if(false);
+        state.ret_if(|ref s| s.a != 0);
         assert_eq!(state.pc, 0xcafe);
         assert_eq!(state.increment, 1);
 
-        state.ret_if(true);
+        state.ret_if(|ref s| s.a == 0);
         assert_eq!(state.pc, 0x9876);
         assert_eq!(state.increment, 0);
     }

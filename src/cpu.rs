@@ -420,8 +420,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
 
         0xc0 => {
             // RNZ
-            let condition = !s.cc.z;
-            s.ret_if(condition);
+            s.ret_if(State::is_nz);
         }
         0xc1 => {
             // POP B
@@ -432,16 +431,15 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xc2 => {
             // JNZ a16
-            s.jump_if(|ref s| !s.cc.z);
+            s.jump_if(State::is_nz);
         }
         0xc3 => {
             // JMP a16
-            s.jump_if(|ref _s| true);
+            s.jump_if(State::unconditionally);
         }
         0xc4 => {
             // CNZ a16
-            let condition = !s.cc.z;
-            s.call_if(condition);
+            s.call_if(State::is_nz);
         }
         0xc5 => {
             // PUSH B
@@ -458,29 +456,27 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         0xc7 => unimplemented_instruction(s), // RST 0 (unimplemented)
         0xc8 => {
             // RZ
-            let condition = s.cc.z;
-            s.ret_if(condition);
+            s.ret_if(State::is_z);
         }
         0xc9 => {
             // RET
-            s.ret_if(true);
+            s.ret_if(State::unconditionally);
         }
         0xca => {
             // JZ a16
-            s.jump_if(|ref s| s.cc.z);
+            s.jump_if(State::is_z);
         }
         0xcb => {
             // JMP a16
-            s.jump_if(|ref _s| true);
+            s.jump_if(State::unconditionally);
         }
         0xcc => {
             // CZ a16
-            let condition = s.cc.z;
-            s.call_if(condition);
+            s.call_if(State::is_z);
         }
         0xcd => {
             // CALL a16
-            s.call_if(true);
+            s.call_if(State::unconditionally);
         }
         0xce => {
             // ACI byte
@@ -491,8 +487,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
 
         0xd0 => {
             // RNC
-            let condition = !s.cc.cy;
-            s.ret_if(condition);
+            s.ret_if(State::is_nc);
         }
         0xd1 => {
             // POP D
@@ -503,7 +498,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xd2 => {
             // JNC a16
-            s.jump_if(|ref s| !s.cc.cy)
+            s.jump_if(State::is_nc)
         }
         0xd3 => {
             // OUT byte
@@ -512,8 +507,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xd4 => {
             // CNC a16
-            let condition = !s.cc.cy;
-            s.call_if(condition);
+            s.call_if(State::is_nc);
         }
         0xd5 => {
             // PUSH D
@@ -530,16 +524,15 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         0xd7 => unimplemented_instruction(s), // RST 2 (unimplemented)
         0xd8 => {
             // RC
-            let condition = s.cc.cy;
-            s.ret_if(condition);
+            s.ret_if(State::is_c);
         }
         0xd9 => {
             // RET
-            s.ret_if(true);
+            s.ret_if(State::unconditionally);
         }
         0xda => {
             // JC a16
-            s.jump_if(|ref s| s.cc.cy);
+            s.jump_if(State::is_c);
         }
         0xdb => {
             // IN byte
@@ -548,12 +541,11 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xdc => {
             // CC a16
-            let condition = s.cc.cy;
-            s.call_if(condition);
+            s.call_if(State::is_c);
         }
         0xdd => {
             // CALL a16
-            s.call_if(true);
+            s.call_if(State::unconditionally);
         }
         0xde => {
             // SBI byte
@@ -564,8 +556,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
 
         0xe0 => {
             // RPO
-            let condition = !s.cc.p;
-            s.ret_if(condition);
+            s.ret_if(|ref s| !s.cc.p);
         }
         0xe1 => {
             // POP H
@@ -591,8 +582,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xe4 => {
             // CPO a16
-            let condition = !s.cc.p;
-            s.call_if(condition);
+            s.call_if(|ref s| !s.cc.p);
         }
         0xe5 => {
             // PUSH H
@@ -609,8 +599,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         0xe7 => unimplemented_instruction(s), // RST 4 (unimplemented)
         0xe8 => {
             // RPE
-            let condition = s.cc.p;
-            s.ret_if(condition);
+            s.ret_if(|ref s| s.cc.p);
         }
         0xe9 => {
             // PCHL
@@ -635,12 +624,11 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xec => {
             // CPE a16
-            let condition = s.cc.p;
-            s.call_if(condition);
+            s.call_if(|ref s| s.cc.p);
         }
         0xed => {
             // CALL a16
-            s.call_if(true);
+            s.call_if(State::unconditionally);
         }
         0xee => {
             // XRI byte
@@ -651,8 +639,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
 
         0xf0 => {
             // RP
-            let condition = !s.cc.s;
-            s.ret_if(condition);
+            s.ret_if(State::is_plus);
         }
         0xf1 => {
             // POP PSW
@@ -663,15 +650,14 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xf2 => {
             // JP a16
-            s.jump_if(|ref s| !s.cc.s);
+            s.jump_if(State::is_plus);
         }
         0xf3 => {
             s.int_enable = false;
         } // DI
         0xf4 => {
             // CP a16
-            let condition = !s.cc.s;
-            s.call_if(condition);
+            s.call_if(State::is_plus);
         }
         0xf5 => {
             // PUSH PSW
@@ -688,8 +674,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         0xf7 => unimplemented_instruction(s), // RST 6 (unimplemented)
         0xf8 => {
             // RM
-            let condition = s.cc.s;
-            s.ret_if(condition);
+            s.ret_if(State::is_minus);
         }
         0xf9 => {
             // SPHL
@@ -698,19 +683,18 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xfa => {
             // JM a16
-            s.jump_if(|ref s| s.cc.s);
+            s.jump_if(State::is_minus);
         }
         0xfb => {
             s.int_enable = true;
         } // EI
         0xfc => {
             // CM a16
-            let condition = s.cc.s;
-            s.call_if(condition);
+            s.call_if(State::is_minus);
         }
         0xfd => {
             // CALL a16
-            s.call_if(true);
+            s.call_if(State::unconditionally);
         }
         0xfe => {
             // CPI byte
