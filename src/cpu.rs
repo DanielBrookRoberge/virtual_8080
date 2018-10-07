@@ -331,35 +331,29 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
 
         0x40..=0x47 => {
             // MOV B, *
-            let operand = s.get_operand(opcode);
-            s.b = operand;
+            s.b = s.get_operand(opcode);
         }
         0x48..=0x4f => {
             // MOV C, *
-            let operand = s.get_operand(opcode);
-            s.c = operand;
+            s.c = s.get_operand(opcode);
         }
 
         0x50..=0x57 => {
             // MOV D, *
-            let operand = s.get_operand(opcode);
-            s.d = operand;
+            s.d = s.get_operand(opcode);
         }
         0x58..=0x5f => {
             // MOV E, *
-            let operand = s.get_operand(opcode);
-            s.e = operand;
+            s.e = s.get_operand(opcode);
         }
 
         0x60..=0x67 => {
             // MOV H, *
-            let operand = s.get_operand(opcode);
-            s.h = operand;
+            s.h = s.get_operand(opcode);
         }
         0x68..=0x6f => {
             // MOV L, *
-            let operand = s.get_operand(opcode);
-            s.l = operand;
+            s.l = s.get_operand(opcode);
         }
 
         0x76 => unimplemented_instruction(s), // HLT
@@ -370,8 +364,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0x78..=0x7f => {
             // MOV A, *
-            let operand = s.get_operand(opcode);
-            s.a = operand;
+            s.a = s.get_operand(opcode);
         }
 
         0x80..=0x87 => {
@@ -424,10 +417,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xc1 => {
             // POP B
-            let c = s.pop8();
-            let b = s.pop8();
-            s.c = c;
-            s.b = b;
+            s.c = s.pop8();
+            s.b = s.pop8();
         }
         0xc2 => {
             // JNZ a16
@@ -491,10 +482,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xd1 => {
             // POP D
-            let e = s.pop8();
-            let d = s.pop8();
-            s.e = e;
-            s.d = d;
+            s.e = s.pop8();
+            s.d = s.pop8();
         }
         0xd2 => {
             // JNC a16
@@ -502,8 +491,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xd3 => {
             // OUT byte
-            let port = s.get_arg(1);
-            m.output(port, s.a);
+            m.output(s.get_arg(1), s.a);
         }
         0xd4 => {
             // CNC a16
@@ -536,8 +524,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xdb => {
             // IN byte
-            let port = s.get_arg(1);
-            s.a = m.input(port);
+            s.a = m.input(s.get_arg(1));
         }
         0xdc => {
             // CC a16
@@ -560,10 +547,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xe1 => {
             // POP H
-            let l = s.pop8();
-            let h = s.pop8();
-            s.l = l;
-            s.h = h;
+            s.l = s.pop8();
+            s.h = s.pop8();
         }
         0xe2 => {
             // JPO a16
@@ -603,8 +588,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xe9 => {
             // PCHL
-            let new_address = s.get_hl_address();
-            s.pc = new_address;
+            s.pc = s.get_hl_address();
         }
         0xea => {
             // JPE a16
@@ -644,9 +628,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         0xf1 => {
             // POP PSW
             let cc = s.pop8();
-            let a = s.pop8();
             s.cc.deserialize(cc);
-            s.a = a;
+            s.a = s.pop8();
         }
         0xf2 => {
             // JP a16
@@ -678,8 +661,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
         }
         0xf9 => {
             // SPHL
-            let new_pointer = s.get_hl_address();
-            s.sp = new_pointer;
+            s.sp = s.get_hl_address();
         }
         0xfa => {
             // JM a16
