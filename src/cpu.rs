@@ -2,6 +2,28 @@ use bytes::*;
 use machine::Machine;
 use state::State;
 
+static OPCODE_TIMING: [usize; 256] = [
+    4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
+    4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x10..0x1f
+    4, 10, 16, 5, 5, 5, 7, 4, 4, 10, 16, 5, 5, 5, 7, 4, //etc
+    4, 10, 13, 5, 10, 10, 10, 4, 4, 10, 13, 5, 5, 5, 7, 4,
+
+    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5, //0x40..0x4f
+    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+    7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 7, 5,
+
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, //0x80..8x4f
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+
+    11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11, //0xc0..0xcf
+    11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11,
+    11, 10, 10, 18, 17, 11, 7, 11, 11, 5, 10, 5, 17, 17, 7, 11,
+    11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11,
+];
+
 fn unimplemented_instruction(s: &mut State) {
     println!(
         "Error: unimplemented instruction 0x{:02x} at 0x{:04x}",
@@ -12,7 +34,7 @@ fn unimplemented_instruction(s: &mut State) {
     panic!("unimplemented");
 }
 
-pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
+pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
     let opcode = s.get_opcode();
 
     match opcode {
@@ -689,4 +711,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) {
     }
 
     s.advance();
+    OPCODE_TIMING[opcode as usize]
+}
+
+pub fn trigger_interrupt(s: &mut State, n: u16) {
+    let pc = s.pc;
+    s.push16(pc);
+
+    s.pc = 0x08 * n;
+    s.int_enable = false;
 }
