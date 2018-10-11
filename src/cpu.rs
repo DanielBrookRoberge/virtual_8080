@@ -106,7 +106,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x0d => {
             // DCR C
-            let new_value = s.c - 1;
+            let new_value = s.c.wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.c = new_value
@@ -148,7 +148,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x15 => {
             // DCR D
-            let new_value = s.d - 1;
+            let new_value = s.d.wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.d = new_value
@@ -233,7 +233,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x25 => {
             // DCR H
-            let new_value = s.h - 1;
+            let new_value = s.h.wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.h = new_value
@@ -269,7 +269,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x2d => {
             // DCR L
-            let new_value = s.l - 1;
+            let new_value = s.l.wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.l = new_value
@@ -305,7 +305,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x35 => {
             // DCR M
-            let new_value = s.get_m() - 1;
+            let new_value = s.get_m().wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.set_m(new_value);
@@ -341,7 +341,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x3d => {
             // DCR A
-            let new_value = s.a - 1;
+            let new_value = s.a.wrapping_sub(1);
             s.cc.set_z(new_value);
             s.cc.set_s(new_value);
             s.a = new_value
