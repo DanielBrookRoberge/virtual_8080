@@ -1,6 +1,7 @@
 use bytes::*;
 use machine::Machine;
 use state::State;
+use stack::Stack;
 
 static OPCODE_TIMING: [usize; 256] = [
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
