@@ -63,6 +63,10 @@ impl State {
         s.cc.cy
     }
 
+    pub fn is_parity_odd(s: &State) -> bool {
+        !s.cc.p
+    }
+
     pub fn unconditionally(_s: &State) -> bool {
         true
     }
@@ -81,6 +85,20 @@ impl State {
         self.memory.get(self.pc + offset)
     }
 
+    pub fn get_arg16(&mut self) -> u16 {
+        let lo = self.get_arg(1);
+        let ho = self.get_arg(2);
+        assemble_word(ho, lo)
+    }
+
+    pub fn get_bc(&self) -> u16 {
+        assemble_word(self.b, self.c)
+    }
+
+    pub fn get_de(&self) -> u16 {
+        assemble_word(self.d, self.e)
+    }
+
     pub fn get_hl_address(&self) -> u16 {
         assemble_word(self.h, self.l)
     }
@@ -92,6 +110,21 @@ impl State {
     pub fn set_m(&mut self, value: u8) {
         let address = self.get_hl_address();
         self.memory.set(address, value)
+    }
+
+    pub fn set_bc(&mut self, value: u16) {
+        self.b = high_order_byte(value);
+        self.c = low_order_byte(value);
+    }
+
+    pub fn set_de(&mut self, value: u16) {
+        self.d = high_order_byte(value);
+        self.e = low_order_byte(value);
+    }
+
+    pub fn set_hl(&mut self, value: u16) {
+        self.h = high_order_byte(value);
+        self.l = low_order_byte(value);
     }
 
     pub fn get_operand(&self, opcode: u8) -> u8 {
@@ -321,6 +354,45 @@ mod tests {
         state.l = 0xfe;
 
         assert_eq!(state.get_m(), 0xff);
+    }
+
+    #[test]
+    fn test_set_bc() {
+        let mut state = State::new();
+
+        state.set_bc(0x1020);
+        assert_eq!(state.b, 0x10);
+        assert_eq!(state.c, 0x20);
+
+        state.set_bc(0xabcd);
+        assert_eq!(state.b, 0xab);
+        assert_eq!(state.c, 0xcd);
+    }
+
+    #[test]
+    fn test_set_de() {
+        let mut state = State::new();
+
+        state.set_de(0x1020);
+        assert_eq!(state.d, 0x10);
+        assert_eq!(state.e, 0x20);
+
+        state.set_de(0xabcd);
+        assert_eq!(state.d, 0xab);
+        assert_eq!(state.e, 0xcd);
+    }
+
+    #[test]
+    fn test_set_hl() {
+        let mut state = State::new();
+
+        state.set_hl(0x1020);
+        assert_eq!(state.h, 0x10);
+        assert_eq!(state.l, 0x20);
+
+        state.set_hl(0xabcd);
+        assert_eq!(state.h, 0xab);
+        assert_eq!(state.l, 0xcd);
     }
 
     #[test]

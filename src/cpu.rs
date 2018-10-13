@@ -41,24 +41,23 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x00 => (), // NOP
         0x01 => {
             // LXI B,word
-            s.c = s.get_arg(1);
-            s.b = s.get_arg(2);
+            let word = s.get_arg16();
+            s.set_bc(word);
         }
         0x02 => {
             // STAX B
-            let address = assemble_word(s.b, s.c);
+            let address = s.get_bc();
             let val = s.a;
             s.memory.set(address, val);
         }
         0x03 => {
             // INX B
-            let new_value = assemble_word(s.b, s.c) + 1;
-            s.b = high_order_byte(new_value);
-            s.c = low_order_byte(new_value);
+            let new_value = s.get_bc().wrapping_add(1);
+            s.set_bc(new_value);
         }
         0x04 => {
             // INR B
-            let new_value = s.b + 1;
+            let new_value = s.b.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.b = new_value;
         }
@@ -73,31 +72,28 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         } // MVI B,byte
         0x07 => {
             // RLC
-            let x = s.a;
-            s.a = rotate_left(x);
-            s.cc.cy = (x & 0x80) == 1;
+            s.a = s.a.rotate_left(1);
+            s.cc.cy = (s.a & 0x80) == 1;
         }
         0x08 => (), // NOP
         0x09 => {
             // DAD B
-            let addend = assemble_word(s.b, s.c);
+            let addend = s.get_bc();
             s.add16(addend);
         }
         0x0a => {
             // LDAX B
-            let address = assemble_word(s.b, s.c);
-            let val = s.memory.get(address);
-            s.a = val;
+            let address = s.get_bc();
+            s.a = s.memory.get(address);
         }
         0x0b => {
             // DCX B
-            let new_value = assemble_word(s.b, s.c).wrapping_sub(1);
-            s.b = high_order_byte(new_value);
-            s.c = low_order_byte(new_value);
+            let new_value = s.get_bc().wrapping_sub(1);
+            s.set_bc(new_value);
         }
         0x0c => {
             // INR C
-            let new_value = s.c + 1;
+            let new_value = s.c.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.c = new_value;
         }
@@ -120,24 +116,23 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x10 => (), // NOP
         0x11 => {
             // LXI D,word
-            s.e = s.get_arg(1);
-            s.d = s.get_arg(2);
+            let word = s.get_arg16();
+            s.set_de(word);
         }
         0x12 => {
             // STAX D
-            let address = assemble_word(s.d, s.e);
+            let address = s.get_de();
             let val = s.a;
             s.memory.set(address, val);
         }
         0x13 => {
             // INX D
-            let new_value = assemble_word(s.d, s.e).wrapping_add(1);
-            s.d = high_order_byte(new_value);
-            s.e = low_order_byte(new_value);
+            let new_value = s.get_de().wrapping_add(1);
+            s.set_de(new_value);
         }
         0x14 => {
             // INR D
-            let new_value = s.d + 1;
+            let new_value = s.d.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.d = new_value;
         }
@@ -159,24 +154,22 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x18 => (), // NOP
         0x19 => {
             // DAD D
-            let addend = assemble_word(s.d, s.e);
+            let addend = s.get_de();
             s.add16(addend);
         }
         0x1a => {
             // LDAX D
-            let address = assemble_word(s.d, s.e);
-            let val = s.memory.get(address);
-            s.a = val;
+            let address = s.get_de();
+            s.a = s.memory.get(address);
         }
         0x1b => {
             // DCX D
-            let new_value = assemble_word(s.d, s.e).wrapping_sub(1);
-            s.d = high_order_byte(new_value);
-            s.e = low_order_byte(new_value);
+            let new_value = s.get_de().wrapping_sub(1);
+            s.set_de(new_value);
         }
         0x1c => {
             // INR E
-            let new_value = s.e + 1;
+            let new_value = s.e.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.e = new_value;
         }
@@ -199,12 +192,12 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x20 => (), // NOP
         0x21 => {
             // LXI H,word
-            s.l = s.get_arg(1);
-            s.h = s.get_arg(2);
+            let word = s.get_arg16();
+            s.set_hl(word);
         }
         0x22 => {
             // SHLD a16
-            let address = assemble_word(s.get_arg(2), s.get_arg(1));
+            let address = s.get_arg16();
             let l = s.l;
             let h = s.h;
             s.memory.set(address, l);
@@ -212,13 +205,12 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x23 => {
             // INX H
-            let new_value = assemble_word(s.h, s.l) + 1;
-            s.h = high_order_byte(new_value);
-            s.l = low_order_byte(new_value);
+            let new_value = s.get_hl_address().wrapping_add(1);
+            s.set_hl(new_value);
         }
         0x24 => {
             // INR H
-            let new_value = s.h + 1;
+            let new_value = s.h.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.h = new_value;
         }
@@ -243,24 +235,23 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x28 => (),                           // NOP
         0x29 => {
             // DAD H
-            let addend = assemble_word(s.h, s.l);
+            let addend = s.get_hl_address();
             s.add16(addend);
         }
         0x2a => {
             // LHLD a16
-            let address = assemble_word(s.get_arg(2), s.get_arg(1));
+            let address = s.get_arg16();
             s.l = s.memory.get(address);
             s.h = s.memory.get(address + 1);
         }
         0x2b => {
             // DCX H
-            let new_value = assemble_word(s.h, s.l).wrapping_sub(1);
-            s.h = high_order_byte(new_value);
-            s.l = low_order_byte(new_value);
+            let new_value = s.get_hl_address().wrapping_sub(1);
+            s.set_hl(new_value);
         }
         0x2c => {
             // INR L
-            let new_value = s.l + 1;
+            let new_value = s.l.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.l = new_value;
         }
@@ -280,12 +271,11 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x30 => (), // NOP
         0x31 => {
             // LXI SP,word
-            let new_address = assemble_word(s.get_arg(2), s.get_arg(1));
-            s.sp = new_address;
+            s.sp = s.get_arg16();
         }
         0x32 => {
             // STA a16
-            let new_address = assemble_word(s.get_arg(2), s.get_arg(1));
+            let new_address = s.get_arg16();
             let a = s.a;
             s.memory.set(new_address, a);
         }
@@ -294,7 +284,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         } // INX SP
         0x34 => {
             // INR M
-            let new_value = s.get_m() + 1;
+            let new_value = s.get_m().wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.set_m(new_value);
         }
@@ -320,7 +310,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x3a => {
             // LDA a16
-            let new_address = assemble_word(s.get_arg(2), s.get_arg(1));
+            let new_address = s.get_arg16();
             s.a = s.memory.get(new_address);
         }
         0x3b => {
@@ -328,7 +318,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         } // DCX SP
         0x3c => {
             // INR A
-            let new_value = s.a + 1;
+            let new_value = s.a.wrapping_add(1);
             s.set_flags_no_carry(new_value);
             s.a = new_value;
         }
@@ -431,8 +421,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xc1 => {
             // POP B
-            s.c = s.pop8();
-            s.b = s.pop8();
+            let new_bc = s.pop16();
+            s.set_bc(new_bc);
         }
         0xc2 => {
             // JNZ a16
@@ -448,10 +438,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xc5 => {
             // PUSH B
-            let b = s.b;
-            let c = s.c;
-            s.push8(b);
-            s.push8(c);
+            let bc = s.get_bc();
+            s.push16(bc);
         }
         0xc6 => {
             // ADI byte
@@ -496,8 +484,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xd1 => {
             // POP D
-            s.e = s.pop8();
-            s.d = s.pop8();
+            let new_de = s.pop16();
+            s.set_de(new_de);
         }
         0xd2 => {
             // JNC a16
@@ -513,10 +501,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xd5 => {
             // PUSH D
-            let d = s.d;
-            let e = s.e;
-            s.push8(d);
-            s.push8(e);
+            let de = s.get_de();
+            s.push16(de);
         }
         0xd6 => {
             // SUI byte
@@ -557,38 +543,32 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
 
         0xe0 => {
             // RPO
-            s.ret_if(|ref s| !s.cc.p);
+            s.ret_if(State::is_parity_odd);
         }
         0xe1 => {
             // POP H
-            s.l = s.pop8();
-            s.h = s.pop8();
+            let new_hl = s.pop16();
+            s.set_hl(new_hl);
         }
         0xe2 => {
             // JPO a16
-            s.jump_if(|ref s| !s.cc.p);
+            s.jump_if(State::is_parity_odd);
         }
         0xe3 => {
             // XTHL
-            let new_l = s.pop8();
-            let new_h = s.pop8();
-            let h = s.h;
-            let l = s.l;
-            s.push8(h);
-            s.push8(l);
-            s.l = new_l;
-            s.h = new_h;
+            let new_hl = s.pop16();
+            let old_hl = s.get_hl_address();
+            s.push16(old_hl);
+            s.set_hl(new_hl);
         }
         0xe4 => {
             // CPO a16
-            s.call_if(|ref s| !s.cc.p);
+            s.call_if(State::is_parity_odd);
         }
         0xe5 => {
             // PUSH H
-            let h = s.h;
-            let l = s.l;
-            s.push8(h);
-            s.push8(l);
+            let hl = s.get_hl_address();
+            s.push16(hl);
         }
         0xe6 => {
             // ANI byte
@@ -641,9 +621,9 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xf1 => {
             // POP PSW
-            let cc = s.pop8();
-            s.cc.deserialize(cc);
-            s.a = s.pop8();
+            let word = s.pop16();
+            s.a = high_order_byte(word);
+            s.cc.deserialize(low_order_byte(word));
         }
         0xf2 => {
             // JP a16
@@ -658,10 +638,8 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0xf5 => {
             // PUSH PSW
-            let a = s.a;
-            let cc = s.cc.serialize();
-            s.push8(a);
-            s.push8(cc);
+            let word = assemble_word(s.a, s.cc.serialize());
+            s.push16(word);
         }
         0xf6 => {
             // ORI byte

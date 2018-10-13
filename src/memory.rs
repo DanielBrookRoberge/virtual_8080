@@ -20,7 +20,7 @@ impl Memory {
     pub fn load(&mut self, base: u16, data: Vec<u8>) {
         let mut addr = base;
         for byte in data.iter() {
-            self.set(addr, *byte);
+            self.m[addr as usize] = *byte;
             addr += 1;
         }
     }
