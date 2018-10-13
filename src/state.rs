@@ -2,6 +2,7 @@ use bytes::*;
 use flags::Flags;
 use memory::Memory;
 use stack::Stack;
+use program::Program;
 
 static INSTRUCTION_LENGTH: [u16; 256] = [
     1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, // 0x00..0x0f
@@ -95,24 +96,6 @@ impl State {
             self.pc += INSTRUCTION_LENGTH[self.get_opcode() as usize];
         }
         self.jumped = false;
-    }
-
-    pub fn get_opcode(&self) -> u8 {
-        self.memory.get(self.pc)
-    }
-
-    pub fn get_arg(&self, offset: u16) -> u8 {
-        self.memory.get(self.pc + offset)
-    }
-
-    pub fn get_arg8(&self) -> u8 {
-        self.get_arg(1)
-    }
-
-    pub fn get_arg16(& self) -> u16 {
-        let lo = self.get_arg(1);
-        let ho = self.get_arg(2);
-        assemble_word(ho, lo)
     }
 
     pub fn get_bc(&self) -> u16 {
@@ -268,6 +251,13 @@ impl State {
             self.jumped = true;
         }
     }
+
+    pub fn stack_debug(&self, n: usize) {
+        println!("Stack pointer: {:04x}", self.sp);
+        for i in 0..n {
+            println!("{:02x}", self.memory.get(self.sp + (i as u16)));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -287,31 +277,6 @@ mod tests {
         assert_eq!(state.l, 0);
         assert_eq!(state.sp, 0);
         assert_eq!(state.pc, 0);
-    }
-
-    #[test]
-    fn test_get_opcode() {
-        let mut state = State::new();
-
-        state.memory.load(0x4096, vec![0xab, 0xec]);
-        state.memory.load(0xaaaa, vec![0x02]);
-
-        state.pc = 0x4097;
-        assert_eq!(state.get_opcode(), 0xec);
-
-        state.pc = 0xaaaa;
-        assert_eq!(state.get_opcode(), 0x02);
-    }
-
-    #[test]
-    fn test_get_arg() {
-        let mut state = State::new();
-
-        state.memory.load(0xbeef, vec![0xab, 0xca, 0xfe]);
-
-        state.pc = 0xbeef;
-        assert_eq!(state.get_arg(1), 0xca);
-        assert_eq!(state.get_arg(2), 0xfe);
     }
 
     #[test]
@@ -358,10 +323,12 @@ mod tests {
         state.set_bc(0x1020);
         assert_eq!(state.b, 0x10);
         assert_eq!(state.c, 0x20);
+        assert_eq!(state.get_bc(), 0x1020);
 
         state.set_bc(0xabcd);
         assert_eq!(state.b, 0xab);
         assert_eq!(state.c, 0xcd);
+        assert_eq!(state.get_bc(), 0xabcd);
     }
 
     #[test]
@@ -371,10 +338,12 @@ mod tests {
         state.set_de(0x1020);
         assert_eq!(state.d, 0x10);
         assert_eq!(state.e, 0x20);
+        assert_eq!(state.get_de(), 0x1020);
 
         state.set_de(0xabcd);
         assert_eq!(state.d, 0xab);
         assert_eq!(state.e, 0xcd);
+        assert_eq!(state.get_de(), 0xabcd);
     }
 
     #[test]

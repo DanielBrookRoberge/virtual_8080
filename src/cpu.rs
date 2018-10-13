@@ -2,6 +2,7 @@ use bytes::*;
 use machine::Machine;
 use state::State;
 use stack::Stack;
+use program::Program;
 
 static OPCODE_TIMING: [usize; 256] = [
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
@@ -100,7 +101,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x0f => {
             // RRC
             let x = s.a;
-            s.a = rotate_right(x);
+            s.a = x.rotate_right(1);
             s.cc.cy = (x & 0x01) == 1;
         }
 
