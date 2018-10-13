@@ -1,3 +1,5 @@
+#![feature(nll)]
+
 pub mod bytes;
 pub mod cpu;
 pub mod flags;

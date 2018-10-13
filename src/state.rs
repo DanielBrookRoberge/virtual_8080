@@ -1,8 +1,26 @@
 use bytes::*;
 use flags::Flags;
 use memory::Memory;
-use std::cmp::max;
 use stack::Stack;
+
+static INSTRUCTION_LENGTH: [u16; 256] = [
+    1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, // 0x00..0x0f
+    1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, // 0x10..0x1f
+    1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1, // 0x20..0x2f
+    1, 3, 3, 1, 1, 1, 2, 1, 1, 1, 3, 1, 1, 1, 2, 1, // 0x30..0x3f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x40..0x4f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x50..0x5f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x60..0x6f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x70..0x7f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x80..0x8f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0x90..0x9f
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0xa0..0xaf
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 0xb0..0xbf
+    1, 1, 3, 3, 3, 1, 2, 1, 1, 1, 3, 3, 3, 3, 2, 1, // 0xc0..0xcf
+    1, 1, 3, 2, 3, 1, 2, 1, 1, 1, 3, 2, 3, 3, 2, 1, // 0xd0..0xdf
+    1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1, // 0xc0..0xcf
+    1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1, // 0xc0..0xcf
+];
 
 #[derive(Debug)]
 pub struct State {
@@ -18,7 +36,7 @@ pub struct State {
     pub cc: Flags,
     pub int_enable: bool,
     pub memory: Memory,
-    pub increment: u16,
+    pub jumped: bool,
 }
 
 impl State {
@@ -36,7 +54,7 @@ impl State {
             cc: Flags::new(),
             int_enable: false,
             memory: Memory::new(),
-            increment: 1,
+            jumped: false,
         }
     }
 
@@ -73,20 +91,25 @@ impl State {
     }
 
     pub fn advance(&mut self) {
-        self.pc += self.increment;
+        if !self.jumped {
+            self.pc += INSTRUCTION_LENGTH[self.get_opcode() as usize];
+        }
+        self.jumped = false;
     }
 
-    pub fn get_opcode(&mut self) -> u8 {
-        self.increment = 1;
+    pub fn get_opcode(&self) -> u8 {
         self.memory.get(self.pc)
     }
 
-    pub fn get_arg(&mut self, offset: u16) -> u8 {
-        self.increment = max(self.increment, 1 + offset);
+    pub fn get_arg(&self, offset: u16) -> u8 {
         self.memory.get(self.pc + offset)
     }
 
-    pub fn get_arg16(&mut self) -> u16 {
+    pub fn get_arg8(&self) -> u8 {
+        self.get_arg(1)
+    }
+
+    pub fn get_arg16(& self) -> u16 {
         let lo = self.get_arg(1);
         let ho = self.get_arg(2);
         assemble_word(ho, lo)
@@ -163,9 +186,7 @@ impl State {
         let val = self.get_hl_address();
         let result = (val as u32) + (addend as u32);
         self.cc.cy = result > 0xffff;
-        let result16 = result as u16;
-        self.h = high_order_byte(result16);
-        self.l = low_order_byte(result16);
+        self.set_hl(result as u16);
     }
 
     pub fn adc8(&mut self, addend: u8) {
@@ -220,7 +241,7 @@ impl State {
         let new_address = assemble_word(self.get_arg(2), self.get_arg(1));
         if predicate(self) {
             self.pc = new_address;
-            self.increment = 0;
+            self.jumped = true;
         }
     }
 
@@ -230,7 +251,7 @@ impl State {
             let ret = self.pc + 2;
             self.push16(ret);
             self.pc = new_address;
-            self.increment = 0;
+            self.jumped = true;
         }
     }
 
@@ -238,13 +259,13 @@ impl State {
         let ret = self.pc + 2;
         self.push16(ret);
         self.pc = target;
-        self.increment = 0;
+        self.jumped = true;
     }
 
     pub fn ret_if(&mut self, predicate: impl Fn(&State) -> bool) {
         if predicate(self) {
             self.pc = self.pop16();
-            self.increment = 0;
+            self.jumped = true;
         }
     }
 }
@@ -277,11 +298,9 @@ mod tests {
 
         state.pc = 0x4097;
         assert_eq!(state.get_opcode(), 0xec);
-        assert_eq!(state.increment, 1);
 
         state.pc = 0xaaaa;
         assert_eq!(state.get_opcode(), 0x02);
-        assert_eq!(state.increment, 1);
     }
 
     #[test]
@@ -292,11 +311,7 @@ mod tests {
 
         state.pc = 0xbeef;
         assert_eq!(state.get_arg(1), 0xca);
-        assert_eq!(state.increment, 2);
         assert_eq!(state.get_arg(2), 0xfe);
-        assert_eq!(state.increment, 3);
-        state.get_arg(1);
-        assert_eq!(state.increment, 3);
     }
 
     #[test]
@@ -659,11 +674,9 @@ mod tests {
         state.pc = 0x20;
         state.jump_if(|ref s| s.pc == 0x21);
         assert_eq!(state.pc, 0x20);
-        assert_eq!(state.increment, 3);
 
         state.jump_if(|ref s| s.pc < 0x21);
         assert_eq!(state.pc, 0x3216);
-        assert_eq!(state.increment, 0);
     }
 
     #[test]
@@ -679,7 +692,6 @@ mod tests {
         state.pc = 0x3020;
         state.call_if(|ref s| s.pc > 0x4000);
         assert_eq!(state.pc, 0x3020);
-        assert_eq!(state.increment, 3);
         assert_eq!(state.sp, 0xff);
         assert_eq!(state.memory.get(0xfe), 0x00);
         assert_eq!(state.memory.get(0xfd), 0x00);
@@ -687,7 +699,6 @@ mod tests {
         state.pc = 0x3020;
         state.call_if(|ref s| s.pc < 0x4000);
         assert_eq!(state.pc, 0x3216);
-        assert_eq!(state.increment, 0);
         assert_eq!(state.sp, 0xfd);
         assert_eq!(state.memory.get(0xfe), 0x30);
         assert_eq!(state.memory.get(0xfd), 0x22);
@@ -703,10 +714,10 @@ mod tests {
         state.pc = 0xcafe;
         state.ret_if(|ref s| s.a != 0);
         assert_eq!(state.pc, 0xcafe);
-        assert_eq!(state.increment, 1);
+        assert_eq!(state.jumped, false);
 
         state.ret_if(|ref s| s.a == 0);
         assert_eq!(state.pc, 0x9876);
-        assert_eq!(state.increment, 0);
+        assert_eq!(state.jumped, true);
     }
 }
