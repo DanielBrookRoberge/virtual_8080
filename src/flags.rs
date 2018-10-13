@@ -35,6 +35,10 @@ impl Flags {
     pub fn set_s(&mut self, n: u8) {
         self.s = (n & 0x80) != 0;
     }
+
+    pub fn set_p(&mut self, n: u8) {
+        self.p = (n.count_ones() & 0x01) == 0;
+    }
 }
 
 #[cfg(test)]
@@ -107,5 +111,22 @@ mod tests {
 
         flags.set_s(0xff);
         assert_eq!(flags.s, true);
+    }
+
+    #[test]
+    fn set_p_test() {
+        let mut flags = Flags::new();
+
+        flags.set_p(0b11110000);
+        assert_eq!(flags.p, true);
+
+        flags.set_p(0b10101011);
+        assert_eq!(flags.p, false);
+
+        flags.set_p(0);
+        assert_eq!(flags.p, true);
+
+        flags.set_p(0xff);
+        assert_eq!(flags.p, true);
     }
 }

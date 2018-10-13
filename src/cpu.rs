@@ -59,15 +59,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x04 => {
             // INR B
             let new_value = s.b + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.b = new_value;
         }
         0x05 => {
             // DCR B
             let new_value = s.b.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.b = new_value
         }
         0x06 => {
@@ -100,15 +98,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x0c => {
             // INR C
             let new_value = s.c + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.c = new_value;
         }
         0x0d => {
             // DCR C
             let new_value = s.c.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.c = new_value
         }
         0x0e => {
@@ -142,15 +138,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x14 => {
             // INR D
             let new_value = s.d + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.d = new_value;
         }
         0x15 => {
             // DCR D
             let new_value = s.d.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.d = new_value
         }
         0x16 => {
@@ -183,15 +177,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x1c => {
             // INR E
             let new_value = s.e + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.e = new_value;
         }
         0x1d => {
             // DCR E
             let new_value = s.e.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.e = new_value
         }
         0x1e => {
@@ -227,15 +219,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x24 => {
             // INR H
             let new_value = s.h + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.h = new_value;
         }
         0x25 => {
             // DCR H
             let new_value = s.h.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.h = new_value
         }
         0x26 => {
@@ -263,15 +253,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x2c => {
             // INR L
             let new_value = s.l + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.l = new_value;
         }
         0x2d => {
             // DCR L
             let new_value = s.l.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.l = new_value
         }
         0x2e => {
@@ -299,15 +287,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x34 => {
             // INR M
             let new_value = s.get_m() + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.set_m(new_value);
         }
         0x35 => {
             // DCR M
             let new_value = s.get_m().wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.set_m(new_value);
         }
         0x36 => {
@@ -335,15 +321,13 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x3c => {
             // INR A
             let new_value = s.a + 1;
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.a = new_value;
         }
         0x3d => {
             // DCR A
             let new_value = s.a.wrapping_sub(1);
-            s.cc.set_z(new_value);
-            s.cc.set_s(new_value);
+            s.set_flags_no_carry(new_value);
             s.a = new_value
         }
         0x3e => {

@@ -108,9 +108,14 @@ impl State {
         }
     }
 
+    pub fn set_flags_no_carry(&mut self, result: u8) {
+        self.cc.set_z(result);
+        self.cc.set_s(result);
+        self.cc.set_p(result);
+    }
+
     pub fn set_flags(&mut self, result: u16) {
-        self.cc.set_z(low_order_byte(result));
-        self.cc.set_s(low_order_byte(result));
+        self.set_flags_no_carry(low_order_byte(result));
         self.cc.cy = result > 0xff;
     }
 
@@ -348,21 +353,25 @@ mod tests {
         state.set_flags(0);
         assert_eq!(state.cc.z, true);
         assert_eq!(state.cc.s, false);
+        assert_eq!(state.cc.p, true);
         assert_eq!(state.cc.cy, false);
 
         state.set_flags(0xf0);
         assert_eq!(state.cc.z, false);
         assert_eq!(state.cc.s, true);
+        assert_eq!(state.cc.p, true);
         assert_eq!(state.cc.cy, false);
 
         state.set_flags(0x1f8);
         assert_eq!(state.cc.z, false);
         assert_eq!(state.cc.s, true);
+        assert_eq!(state.cc.p, false);
         assert_eq!(state.cc.cy, true);
 
         state.set_flags(0x100);
         assert_eq!(state.cc.z, true);
         assert_eq!(state.cc.s, false);
+        assert_eq!(state.cc.p, true);
         assert_eq!(state.cc.cy, true);
     }
 
