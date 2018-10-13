@@ -91,7 +91,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x0b => {
             // DCX B
-            let new_value = assemble_word(s.b, s.c) - 1;
+            let new_value = assemble_word(s.b, s.c).wrapping_sub(1);
             s.b = high_order_byte(new_value);
             s.c = low_order_byte(new_value);
         }
@@ -231,7 +231,15 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         0x26 => {
             s.h = s.get_arg(1);
         } // MVI H,byte
-        0x27 => unimplemented_instruction(s), // DAA (not implemented!)
+        0x27 => {
+            // DAA
+            if (s.a & 0x0f) > 9 {
+                s.a += 6;
+            }
+            if (s.a & 0xf0) > 0x90 {
+                s.add8(0x60);
+            }
+        }
         0x28 => (),                           // NOP
         0x29 => {
             // DAD H
@@ -246,7 +254,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         }
         0x2b => {
             // DCX H
-            let new_value = assemble_word(s.h, s.l) - 1;
+            let new_value = assemble_word(s.h, s.l).wrapping_sub(1);
             s.h = high_order_byte(new_value);
             s.l = low_order_byte(new_value);
         }
