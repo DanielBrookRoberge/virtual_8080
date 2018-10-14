@@ -56,6 +56,12 @@ pub struct State {
     pub trace_history: VecDeque<Snapshot>,
 }
 
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl State {
     pub fn new() -> State {
         State {
@@ -223,27 +229,26 @@ impl State {
     }
 
     pub fn add8(&mut self, addend: u8) {
-        let result = (self.a as u16) + (addend as u16);
+        let result = u16::from(self.a) + u16::from(addend);
         self.set_flags(result);
         self.a = low_order_byte(result);
     }
 
     pub fn add16(&mut self, addend: u16) {
-        let val = self.get_hl_address();
-        let result = (val as u32) + (addend as u32);
+        let result = u32::from(self.get_hl_address()) + u32::from(addend);
         self.cc.cy = result > 0xffff;
         self.set_hl(result as u16);
     }
 
     pub fn adc8(&mut self, addend: u8) {
-        let result = (self.a as u16) + (addend as u16) + (self.cc.z as u16);
+        let result = u16::from(self.a) + u16::from(addend) + u16::from(self.cc.z);
         self.set_flags(result);
         self.a = low_order_byte(result);
     }
 
     pub fn sub8(&mut self, subtractand: u8) {
         let result = self.a.wrapping_sub(subtractand);
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.cc.cy = self.a < subtractand;
         self.a = result;
     }
@@ -254,32 +259,32 @@ impl State {
             .wrapping_sub(subtractand)
             .wrapping_sub(self.cc.cy as u8);
 
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.cc.cy = self.a < subtractand;
         self.a = result;
     }
 
     pub fn and8(&mut self, operand: u8) {
         let result = self.a & operand;
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.a = result;
     }
 
     pub fn xor8(&mut self, operand: u8) {
         let result = self.a ^ operand;
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.a = result;
     }
 
     pub fn or8(&mut self, operand: u8) {
         let result = self.a | operand;
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.a = result;
     }
 
     pub fn cmp8(&mut self, operand: u8) {
         let result = self.a.wrapping_sub(operand);
-        self.set_flags(result as u16);
+        self.set_flags_no_carry(result);
         self.cc.cy = self.a < operand;
     }
 

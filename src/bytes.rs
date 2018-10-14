@@ -1,5 +1,5 @@
 pub fn assemble_word(h: u8, l: u8) -> u16 {
-    (h as u16) << 8 | (l as u16)
+    u16::from(h) << 8 | u16::from(l)
 }
 
 pub fn high_order_byte(n: u16) -> u8 {

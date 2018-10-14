@@ -127,7 +127,7 @@ pub fn emulate_group0(opcode: u8, s: &mut State) {
             // RAL
             let x = s.a;
             s.a = (s.cc.cy as u8) | (x << 1);
-            s.cc.cy = (x & 0x80) == 1;
+            s.cc.cy = (x & 0x80) != 0;
         }
         0x18 => (), // NOP
         0x19 => {
@@ -421,7 +421,7 @@ fn emulate_group3(opcode: u8, s: &mut State, m: &mut impl Machine) {
             _ => panic!("Shouldn't happen"),
         },
         0x6 => s.operate8(opcode, s.get_arg8()),
-        0x7 => s.rst_to((opcode & 0x38) as u16),
+        0x7 => s.rst_to(u16::from(opcode & 0x38)),
         _ => panic!("Shouldn't happen"),
     }
 }
