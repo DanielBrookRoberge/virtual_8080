@@ -456,7 +456,7 @@ pub fn emulate_instruction(s: &mut State, m: &mut impl Machine) -> usize {
         _ => unimplemented_instruction(s),
     }
 
-    s.advance();
+    s.advance(opcode);
     OPCODE_TIMING[opcode as usize]
 }
 

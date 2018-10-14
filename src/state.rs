@@ -34,7 +34,7 @@ pub struct Snapshot {
     pub e: u8,
     pub h: u8,
     pub l: u8,
-    pub sp:u16,
+    pub sp: u16,
     pub pc: u16
 }
 
@@ -126,9 +126,9 @@ impl State {
         true
     }
 
-    pub fn advance(&mut self) {
+    pub fn advance(&mut self, opcode: u8) {
         if !self.jumped {
-            self.pc += INSTRUCTION_LENGTH[self.get_opcode() as usize];
+            self.pc += INSTRUCTION_LENGTH[opcode as usize];
         }
         self.jumped = false;
     }
@@ -294,7 +294,7 @@ impl State {
     pub fn call_if(&mut self, predicate: impl Fn(&State) -> bool) {
         let new_address = assemble_word(self.get_arg(2), self.get_arg(1));
         if predicate(self) {
-            let ret = self.pc + 2;
+            let ret = self.pc + 3;
             self.push16(ret);
             self.pc = new_address;
             self.jumped = true;
@@ -302,7 +302,7 @@ impl State {
     }
 
     pub fn rst_to(&mut self, target: u16) {
-        let ret = self.pc + 2;
+        let ret = self.pc + 1;
         self.push16(ret);
         self.pc = target;
         self.jumped = true;
@@ -747,7 +747,7 @@ mod tests {
         assert_eq!(state.pc, 0x3216);
         assert_eq!(state.sp, 0xfd);
         assert_eq!(state.memory.get(0xfe), 0x30);
-        assert_eq!(state.memory.get(0xfd), 0x22);
+        assert_eq!(state.memory.get(0xfd), 0x23);
     }
 
     #[test]
