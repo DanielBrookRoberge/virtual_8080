@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use bytes::*;
 use flags::Flags;
 use memory::Memory;
@@ -23,6 +25,19 @@ static INSTRUCTION_LENGTH: [u16; 256] = [
     1, 1, 3, 1, 3, 1, 2, 1, 1, 1, 3, 1, 3, 3, 2, 1, // 0xc0..0xcf
 ];
 
+#[derive(Debug, Clone, Copy)]
+pub struct Snapshot {
+    pub a: u8,
+    pub b: u8,
+    pub c: u8,
+    pub d: u8,
+    pub e: u8,
+    pub h: u8,
+    pub l: u8,
+    pub sp:u16,
+    pub pc: u16
+}
+
 #[derive(Debug)]
 pub struct State {
     pub a: u8,
@@ -38,6 +53,7 @@ pub struct State {
     pub int_enable: bool,
     pub memory: Memory,
     pub jumped: bool,
+    pub trace_history: VecDeque<Snapshot>,
 }
 
 impl State {
@@ -56,6 +72,21 @@ impl State {
             int_enable: false,
             memory: Memory::new(),
             jumped: false,
+            trace_history: VecDeque::with_capacity(50),
+        }
+    }
+
+    pub fn snapshot(&self) -> Snapshot {
+        Snapshot {
+            a: self.a,
+            b: self.b,
+            c: self.c,
+            d: self.d,
+            e: self.e,
+            h: self.h,
+            l: self.l,
+            sp: self.sp,
+            pc: self.pc,
         }
     }
 
@@ -85,6 +116,10 @@ impl State {
 
     pub fn is_parity_odd(s: &State) -> bool {
         !s.cc.p
+    }
+
+    pub fn is_parity_even(s: &State) -> bool {
+        s.cc.p
     }
 
     pub fn unconditionally(_s: &State) -> bool {
@@ -145,6 +180,34 @@ impl State {
             0x6 => self.get_m(),
             0x7 => self.a,
             _ => panic!("shouldn't happen"),
+        }
+    }
+
+    pub fn set_register(&mut self, opcode: u8, val: u8) {
+        match (opcode >> 3) & 0x07 {
+            0x0 => self.b = val,
+            0x1 => self.c = val,
+            0x2 => self.d = val,
+            0x3 => self.e = val,
+            0x4 => self.h = val,
+            0x5 => self.l = val,
+            0x6 => self.set_m(val),
+            0x7 => self.a = val,
+            _ => panic!("shouldn't happen"),
+        }
+    }
+
+    pub fn predicate_for(opcode: u8) -> impl (Fn(&State) -> bool) {
+        match (opcode >> 3) & 0x07 {
+            0x0 => State::is_nz,
+            0x1 => State::is_z,
+            0x2 => State::is_nc,
+            0x3 => State::is_c,
+            0x4 => State::is_parity_odd,
+            0x5 => State::is_parity_even,
+            0x6 => State::is_plus,
+            0x7 => State::is_minus,
+            _ => panic!("shouldn't happen")
         }
     }
 
@@ -256,6 +319,20 @@ impl State {
         println!("Stack pointer: {:04x}", self.sp);
         for i in 0..n {
             println!("{:02x}", self.memory.get(self.sp + (i as u16)));
+        }
+    }
+
+    pub fn operate8(&mut self, opcode: u8, operand: u8) {
+        match (opcode >> 3) & 0x07 {
+            0x0 => self.add8(operand),
+            0x1 => self.adc8(operand),
+            0x2 => self.sub8(operand),
+            0x3 => self.sbb8(operand),
+            0x4 => self.and8(operand),
+            0x5 => self.xor8(operand),
+            0x6 => self.or8(operand),
+            0x7 => self.cmp8(operand),
+            _ => panic!("Shouldn't happen")
         }
     }
 }
