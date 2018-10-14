@@ -3,8 +3,8 @@ use std::collections::VecDeque;
 use bytes::*;
 use flags::Flags;
 use memory::Memory;
-use stack::Stack;
 use program::Program;
+use stack::Stack;
 
 static INSTRUCTION_LENGTH: [u16; 256] = [
     1, 3, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, // 0x00..0x0f
@@ -35,7 +35,7 @@ pub struct Snapshot {
     pub h: u8,
     pub l: u8,
     pub sp: u16,
-    pub pc: u16
+    pub pc: u16,
 }
 
 #[derive(Debug)]
@@ -207,7 +207,7 @@ impl State {
             0x5 => State::is_parity_even,
             0x6 => State::is_plus,
             0x7 => State::is_minus,
-            _ => panic!("shouldn't happen")
+            _ => panic!("shouldn't happen"),
         }
     }
 
@@ -332,7 +332,7 @@ impl State {
             0x5 => self.xor8(operand),
             0x6 => self.or8(operand),
             0x7 => self.cmp8(operand),
-            _ => panic!("Shouldn't happen")
+            _ => panic!("Shouldn't happen"),
         }
     }
 }

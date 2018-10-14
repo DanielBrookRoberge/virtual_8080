@@ -1,29 +1,23 @@
 use bytes::*;
 use machine::Machine;
-use state::State;
-use stack::Stack;
 use program::Program;
+use stack::Stack;
+use state::State;
 
 static OPCODE_TIMING: [usize; 256] = [
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
     4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x10..0x1f
     4, 10, 16, 5, 5, 5, 7, 4, 4, 10, 16, 5, 5, 5, 7, 4, //etc
-    4, 10, 13, 5, 10, 10, 10, 4, 4, 10, 13, 5, 5, 5, 7, 4,
-
-    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5, //0x40..0x4f
-    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
-    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
-    7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 7, 5,
-
-    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, //0x80..8x4f
-    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
-    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
-    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
-
-    11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11, //0xc0..0xcf
-    11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11,
-    11, 10, 10, 18, 17, 11, 7, 11, 11, 5, 10, 5, 17, 17, 7, 11,
-    11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11,
+    4, 10, 13, 5, 10, 10, 10, 4, 4, 10, 13, 5, 5, 5, 7, 4, 5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5,
+    5, 7, 5, //0x40..0x4f
+    5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+    7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 7, 5, 4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7,
+    4, //0x80..8x4f
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+    4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, 11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10,
+    10, 17, 7, 11, //0xc0..0xcf
+    11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11, 11, 10, 10, 18, 17, 11, 7, 11,
+    11, 5, 10, 5, 17, 17, 7, 11, 11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11,
 ];
 
 fn unimplemented_instruction(s: &mut State) {
@@ -205,7 +199,7 @@ pub fn emulate_group0(opcode: u8, s: &mut State) {
                 s.add8(0x60);
             }
         }
-        0x28 => (),                           // NOP
+        0x28 => (), // NOP
         0x29 => {
             // DAD H
             s.add16(s.get_hl_address());
@@ -294,7 +288,7 @@ pub fn emulate_group0(opcode: u8, s: &mut State) {
             s.a = s.get_arg(1);
         } // MVI A,byte
         0x3f => s.cc.cy = !s.cc.cy, // CMC
-        _ => panic!("Unknown opcode")
+        _ => panic!("Unknown opcode"),
     }
 }
 
@@ -306,67 +300,67 @@ fn emulate_group3(opcode: u8, s: &mut State, m: &mut impl Machine) {
                 // POP B
                 let val = s.pop16();
                 s.set_bc(val);
-            },
+            }
             0x1 => {
                 // RET
                 s.ret_if(State::unconditionally);
-            },
+            }
             0x2 => {
                 // POP D
                 let new_de = s.pop16();
                 s.set_de(new_de);
-            },
+            }
             0x3 => {
                 // RET
                 s.ret_if(State::unconditionally);
-            },
+            }
             0x4 => {
                 // POP H
                 let new_hl = s.pop16();
                 s.set_hl(new_hl);
-            },
+            }
             0x5 => {
                 // PCHL
                 s.pc = s.get_hl_address();
                 s.jumped = true;
-            },
+            }
             0x6 => {
                 // POP PSW
                 let word = s.pop16();
                 s.a = high_order_byte(word);
                 s.cc.deserialize(low_order_byte(word));
-            },
+            }
             0x7 => {
                 // SPHL
                 s.sp = s.get_hl_address();
-            },
-            _ => panic!("Shouldn't happen")
+            }
+            _ => panic!("Shouldn't happen"),
         },
         0x2 => s.jump_if(State::predicate_for(opcode)),
         0x3 => match (opcode >> 3) & 0x7 {
             0x0 => {
                 // JMP a16
                 s.jump_if(State::unconditionally);
-            },
+            }
             0x1 => {
                 // JMP a16
                 s.jump_if(State::unconditionally);
-            },
+            }
             0x2 => {
                 // OUT byte
                 m.output(s.get_arg(1), s.a);
-            },
+            }
             0x3 => {
                 // IN byte
                 s.a = m.input(s.get_arg(1));
-            },
+            }
             0x4 => {
                 // XTHL
                 let new_hl = s.pop16();
                 let old_hl = s.get_hl_address();
                 s.push16(old_hl);
                 s.set_hl(new_hl);
-            },
+            }
             0x5 => {
                 // XCHG
                 let d = s.d;
@@ -378,58 +372,57 @@ fn emulate_group3(opcode: u8, s: &mut State, m: &mut impl Machine) {
                 let l = s.l;
                 s.e = l;
                 s.l = e;
-            },
+            }
             0x6 => {
                 // DI
                 s.int_enable = false;
-            },
+            }
 
             0x7 => {
                 // EI
                 s.int_enable = true;
-            }            ,
-            _ => panic!("Shouldn't happen")
+            }
+            _ => panic!("Shouldn't happen"),
         },
         0x4 => s.call_if(State::predicate_for(opcode)),
         0x5 => match (opcode >> 3) & 0x7 {
             0x0 => {
                 // PUSH B
                 s.push16(s.get_bc());
-            },
+            }
             0x1 => {
                 // CALL a16
                 s.call_if(State::unconditionally);
-            },
+            }
             0x2 => {
                 // PUSH D
                 s.push16(s.get_de());
-            },
+            }
             0x3 => {
                 // CALL a16
                 s.call_if(State::unconditionally);
-            },
+            }
             0x4 => {
                 // PUSH H
                 s.push16(s.get_hl_address());
-            },
+            }
             0x5 => {
                 // CALL a16
                 s.call_if(State::unconditionally);
-            },
+            }
             0x6 => {
                 // PUSH PSW
                 s.push16(assemble_word(s.a, s.cc.serialize()));
-            },
+            }
             0x7 => {
                 // CALL a16
                 s.call_if(State::unconditionally);
-            },
-            _ => panic!("Shouldn't happen")
-
+            }
+            _ => panic!("Shouldn't happen"),
         },
         0x6 => s.operate8(opcode, s.get_arg8()),
         0x7 => s.rst_to((opcode & 0x38) as u16),
-        _ => panic!("Shouldn't happen")
+        _ => panic!("Shouldn't happen"),
     }
 }
 

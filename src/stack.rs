@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(state.sp, 0x7e);
     }
 
-        #[test]
+    #[test]
     fn test_pop8() {
         let mut state = State::new();
 
