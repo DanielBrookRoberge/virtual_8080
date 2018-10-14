@@ -267,18 +267,21 @@ impl State {
     pub fn and8(&mut self, operand: u8) {
         let result = self.a & operand;
         self.set_flags_no_carry(result);
+        self.cc.cy = false;
         self.a = result;
     }
 
     pub fn xor8(&mut self, operand: u8) {
         let result = self.a ^ operand;
         self.set_flags_no_carry(result);
+        self.cc.cy = false;
         self.a = result;
     }
 
     pub fn or8(&mut self, operand: u8) {
         let result = self.a | operand;
         self.set_flags_no_carry(result);
+        self.cc.cy = false;
         self.a = result;
     }
 
