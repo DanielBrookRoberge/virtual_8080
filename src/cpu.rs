@@ -68,7 +68,7 @@ pub fn emulate_group0(opcode: u8, s: &mut State) {
             // RLC
             let x = s.a;
             s.a = x.rotate_left(1);
-            s.cc.cy = (x & 0x80) == 1;
+            s.cc.cy = (x & 0x80) != 0;
         }
         0x08 => (), // NOP
         0x09 => {
