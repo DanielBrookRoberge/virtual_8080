@@ -363,15 +363,8 @@ fn emulate_group3(opcode: u8, s: &mut State, m: &mut impl Machine) {
             }
             0x5 => {
                 // XCHG
-                let d = s.d;
-                let h = s.h;
-                s.d = h;
-                s.h = d;
-
-                let e = s.e;
-                let l = s.l;
-                s.e = l;
-                s.l = e;
+                std::mem::swap(&mut s.d, &mut s.h);
+                std::mem::swap(&mut s.e, &mut s.l);
             }
             0x6 => {
                 // DI

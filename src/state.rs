@@ -229,15 +229,16 @@ impl State {
     }
 
     pub fn add8(&mut self, addend: u8) {
-        let result = u16::from(self.a) + u16::from(addend);
-        self.set_flags(result);
-        self.a = low_order_byte(result);
+        let (result, carry) = self.a.overflowing_add(addend);
+        self.set_flags_no_carry(result);
+        self.a = result;
+        self.cc.cy = carry;
     }
 
     pub fn add16(&mut self, addend: u16) {
-        let result = u32::from(self.get_hl_address()) + u32::from(addend);
-        self.cc.cy = result > 0xffff;
-        self.set_hl(result as u16);
+        let (result, carry) = self.get_hl_address().overflowing_add(addend);
+        self.cc.cy = carry;
+        self.set_hl(result);
     }
 
     pub fn adc8(&mut self, addend: u8) {
@@ -247,9 +248,9 @@ impl State {
     }
 
     pub fn sub8(&mut self, subtractand: u8) {
-        let result = self.a.wrapping_sub(subtractand);
+        let (result, carry) = self.a.overflowing_sub(subtractand);
         self.set_flags_no_carry(result);
-        self.cc.cy = self.a < subtractand;
+        self.cc.cy = carry;
         self.a = result;
     }
 
@@ -286,9 +287,9 @@ impl State {
     }
 
     pub fn cmp8(&mut self, operand: u8) {
-        let result = self.a.wrapping_sub(operand);
+        let (result, carry) = self.a.overflowing_sub(operand);
         self.set_flags_no_carry(result);
-        self.cc.cy = self.a < operand;
+        self.cc.cy = carry;
     }
 
     pub fn jump_if(&mut self, predicate: impl Fn(&State) -> bool) {
